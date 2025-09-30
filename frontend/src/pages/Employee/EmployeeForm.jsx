@@ -28,7 +28,10 @@ export default function EmployeeForm({ employee, onSubmit, onClose }) {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setPreviewImage(reader.result);
+      reader.onloadend = () => {
+        setPreviewImage(reader.result);
+        setFormData({ ...formData, image: reader.result });
+      };
       reader.readAsDataURL(file);
     }
   };
@@ -40,10 +43,10 @@ export default function EmployeeForm({ employee, onSubmit, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Save the preview image to formData
-    onSubmit({ ...formData, image: previewImage });
+    onSubmit(formData);
     setFormData({ name: "", email: "", department: "", salary: "", image: "" });
     setPreviewImage("");
+    if (fileInputRef.current) fileInputRef.current.value = null;
   };
 
   return (
@@ -51,7 +54,6 @@ export default function EmployeeForm({ employee, onSubmit, onClose }) {
       <div className="bg-white p-6 rounded-xl shadow-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl font-bold mb-4 text-[#407294]">{employee ? "Edit Employee" : "Add Employee"}</h2>
 
-        {/* Image Upload */}
         <div className="text-center mb-4">
           <img
             src={previewImage || "https://via.placeholder.com/120"}
@@ -80,7 +82,6 @@ export default function EmployeeForm({ employee, onSubmit, onClose }) {
           </div>
         </div>
 
-        {/* Form Inputs */}
         <form onSubmit={handleSubmit} className="space-y-2">
           <input
             type="text"

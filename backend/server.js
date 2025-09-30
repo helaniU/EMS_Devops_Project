@@ -20,6 +20,8 @@ mongoose.connect("mongodb://localhost:27017/EMS_DB")
   .catch((err) => console.log(err));
 
 // Routes
+const employeeRoutes = require("./routes/employee"); // adjust path if different
+const departmentRoutes = require("./routes/department"); // adjust path if different
 app.use("/api/employees", employeeRoutes);
 app.use("/api/departments", departmentRoutes);
 

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import axios from "axios";
 import Navbar from "../../components/AdminNavbar";
 import EmployeeForm from "./EmployeeForm";
 
@@ -7,53 +6,38 @@ export default function EmployeeList() {
   const [employees, setEmployees] = useState([]);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(null); // will store employee id if delete is requested
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
-
-  const fetchEmployees = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/employees");
-      setEmployees(res.data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
+  // Load employees from localStorage
   useEffect(() => {
-    fetchEmployees();
+    const storedEmployees = JSON.parse(localStorage.getItem("employees")) || [];
+    setEmployees(storedEmployees);
   }, []);
+
+  // Save employees to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem("employees", JSON.stringify(employees));
+  }, [employees]);
 
   const handleEdit = (employee) => {
     setEditingEmployee(employee);
     setIsFormOpen(true);
   };
 
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:5000/api/employees/${id}`);
-      setEmployees(employees.filter(emp => emp._id !== id));
-    } catch (err) {
-      console.error(err);
-    }
+  const handleDelete = (id) => {
+    setEmployees(employees.filter(emp => emp.id !== id));
   };
 
-  const handleFormSubmit = async (employeeData) => {
-    try {
-      if (editingEmployee) {
-        // Update existing
-        const res = await axios.put(
-          `http://localhost:5000/api/employees/${editingEmployee._id}`,
-          employeeData
-        );
-        setEmployees(employees.map(emp => emp._id === res.data._id ? res.data : emp));
-      } else {
-        // Add new
-        const res = await axios.post("http://localhost:5000/api/employees", employeeData);
-        setEmployees([...employees, res.data]);
-      }
-    } catch (err) {
-      console.error(err);
+  const handleFormSubmit = (employeeData) => {
+    if (editingEmployee) {
+      // Update existing
+      setEmployees(employees.map(emp => emp.id === editingEmployee.id ? { ...employeeData, id: editingEmployee.id } : emp));
+    } else {
+      // Add new
+      const newEmployee = { ...employeeData, id: Date.now().toString() }; // use timestamp as unique id
+      setEmployees([...employees, newEmployee]);
     }
+
     setIsFormOpen(false);
     setEditingEmployee(null);
   };
@@ -92,7 +76,7 @@ export default function EmployeeList() {
           </thead>
           <tbody>
             {employees.map((emp) => (
-              <tr key={emp._id} className="border-b">
+              <tr key={emp.id} className="border-b">
                 <td className="p-3 flex items-center space-x-2">
                   <img
                     src={emp.image || "https://via.placeholder.com/120"}
@@ -111,7 +95,7 @@ export default function EmployeeList() {
                     Edit
                   </button>
                   <button
-                    onClick={() => setConfirmDelete(emp._id)}
+                    onClick={() => setConfirmDelete(emp.id)}
                     className="bg-red-500 text-white px-3 py-1 rounded transition"
                   >
                     Delete
@@ -120,10 +104,10 @@ export default function EmployeeList() {
               </tr>
             ))}
           </tbody>
-
         </table>
       </div>
-            {confirmDelete && (
+
+      {confirmDelete && (
         <div className="fixed inset-0 flex items-center justify-center bg-opacity-50">
           <div className="bg-white rounded-xl shadow-lg p-6 w-80 border-black">
             <h2 className="text-lg font-bold text-[#0e2f44] mb-4 text-center">
@@ -153,7 +137,6 @@ export default function EmployeeList() {
           </div>
         </div>
       )}
-
     </div>
   );
 }
